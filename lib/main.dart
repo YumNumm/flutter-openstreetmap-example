@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geojson/geojson.dart';
@@ -7,15 +5,10 @@ import 'package:latlong2/latlong.dart' as latlong;
 
 import 'custommap.dart';
 
-late GeoJsonFeatureCollection shibuyaLines;
 late GeoJsonFeatureCollection shibuyaBuildings;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Mapを読み込み
-  final shibuyaLinesJson =
-      await rootBundle.loadString("assets/geo_shibuya_lines.geojson");
-  shibuyaLines = await featuresFromGeoJson(shibuyaLinesJson);
-
   final shibuyaBuildingsJson =
       await rootBundle.loadString("assets/geo_shibuya_buildings.geojson");
   shibuyaBuildings = await featuresFromGeoJson(shibuyaBuildingsJson);
@@ -35,8 +28,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Size screenSize;
   late Offset screenCenter;
-  List<Offset> _roadsPoints = <Offset>[];
-  final List<Path> _buildingsPoints = <Path>[];
   List<Path> _pointsBuildings = <Path>[];
 
   final double _scale = 0.2;
@@ -50,10 +41,8 @@ class _HomePageState extends State<HomePage> {
     // TODO orientation変化時の処理
     screenSize = MediaQuery.of(context).size;
     screenCenter = screenSize.center(Offset.zero);
-    var jsonDataBuildings;
 
     // 建物データの緯度経度を画面描画用に加工
-
     for (final e in shibuyaBuildings.collection) {
       final geometry = e.geometry as GeoJsonMultiPolygon;
       for (final polygon in geometry.polygons) {
@@ -73,7 +62,8 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-    // マップデータが既にOffsetに変換されているなら、dx,dyのみ加算する
+
+    /*// マップデータが既にOffsetに変換されているなら、dx,dyのみ加算する
     if (_roadsPoints.isNotEmpty) {
       _roadsPoints = _roadsPoints.map((e) => e + _delta).toList();
     } else {
@@ -94,11 +84,10 @@ class _HomePageState extends State<HomePage> {
           }
         }
       }
-    }
+    }*/
 
     return Scaffold(
-      body: Container(
-          child: GestureDetector(
+      body: GestureDetector(
         //* onPanUpdateと同時に動かないのでコメントアウト
         //onScaleUpdate: (ScaleUpdateDetails details) {
         //  setState(() {
@@ -114,14 +103,12 @@ class _HomePageState extends State<HomePage> {
           painter: CustomMap(
             scale: _scale,
             delta: _delta,
-            pointsRoads: _roadsPoints,
             screenSize: screenSize,
             pointsBuildings: _pointsBuildings,
           ),
           size: Size.infinite,
-        ), // CustomPaint
-      ) // GestureDetector
-          ), // Container
-    ); // Scaffold
+        ),
+      ),
+    ); //
   }
 }
