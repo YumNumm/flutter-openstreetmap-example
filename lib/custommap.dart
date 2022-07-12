@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 class CustomMap extends CustomPainter {
   Size screenSize;
   List<Path> pointsBuildings;
-  final bgColor = const Color(0xFFF7F7F7);
-  final borderColor = const Color(0xFFCBCBCB);
-  final buildingColor = const Color(0xFFEFEFEF);
-  double scale = 1.0;
+  double scale = 2.0;
   Offset delta = Offset.zero;
+
+  bool isDrawed = false;
 
   /*final Paint paintRoads = Paint()
     ..color = const Color.fromARGB(255, 0, 0, 0)
@@ -25,27 +24,52 @@ class CustomMap extends CustomPainter {
     ..strokeWidth = 1.0;*/
 
   final Paint paintBuilding = Paint()
-    ..color = const Color.fromARGB(255, 71, 22, 207)
-    ..strokeCap = StrokeCap.round
-    ..strokeWidth = 1.0;
+    ..color = const Color.fromARGB(255, 17, 147, 0)
+    ..isAntiAlias = true
+    ..strokeCap = StrokeCap.round;
+
+  final Paint paintOutline = Paint()
+    ..color = const Color.fromARGB(255, 218, 218, 218)
+    ..isAntiAlias = true
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.001;
 
   CustomMap({
-    required this.delta,
-    required this.scale,
     required this.screenSize,
     required this.pointsBuildings,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.restore();
+    canvas
+      ..translate(delta.dx, delta.dy)
+      ..scale(scale, scale);
     // Buildingsの描画開始
     final start = DateTime.now().millisecondsSinceEpoch;
     for (final point in pointsBuildings) {
       canvas.drawPath(point, paintBuilding);
+      //..drawPath(point, paintOutline);
     }
     final end = DateTime.now().millisecondsSinceEpoch;
-    log("Draw Buildings: ${end - start}ms");
+    log("Draw Buildings(Build): ${end - start}ms");
     // Buildings描画終了
+    canvas.save();
+    return;
+
+    log("SAVE COUNT: ${canvas.getSaveCount()} $isDrawed");
+    // 初回描画かどうかを判別
+    if (canvas.getSaveCount() == 1) {
+      isDrawed = true;
+    } else {
+      final start = DateTime.now().millisecondsSinceEpoch;
+      canvas
+        ..translate(delta.dx, delta.dy)
+        ..scale(scale, scale);
+      final end = DateTime.now().millisecondsSinceEpoch;
+      log("Draw Buildings(Rebuild): ${end - start}ms");
+    }
+    canvas.save();
   }
 
   // 描画する点がスクリーン内に含まれるかどうか
